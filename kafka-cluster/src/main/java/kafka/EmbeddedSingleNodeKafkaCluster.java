@@ -203,10 +203,9 @@ public class EmbeddedSingleNodeKafkaCluster {
 
     @Override
     public boolean conditionMet() {
-     // final Set<String> allTopics = new HashSet<>(
-        //  JavaConverters.seqAsJavaListConverter(broker.getKafkaServer().zkClient().getAllTopicsInCluster()).asJava());
-     // return !allTopics.removeAll(deletedTopics);
-      return true;
+      final Set<String> allTopics = new HashSet<>(
+          JavaConverters.seqAsJavaListConverter(broker.getKafkaServer().zkClient().getAllTopicsInCluster()).asJava());
+      return !allTopics.removeAll(deletedTopics);
     }
   }
 }
