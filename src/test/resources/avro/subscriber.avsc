@@ -1,0 +1,11 @@
+{
+  "namespace": "avroModels",
+  "type": "record",
+  "name": "ThreadQaSubscriber",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "name", "type": "string"},
+    {"name": "age", "type": "int"},
+    {"name": "is_qa_automation", "type":  "boolean"}
+  ]
+}

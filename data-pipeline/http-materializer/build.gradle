@@ -1,0 +1,55 @@
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
+
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "6.0.0-m2"
+    id "com.github.davidmc24.gradle.plugin.avro" version "1.5.0"
+
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://packages.confluent.io/maven"
+    }
+}
+
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'com.typesafe:config:1.4.2'
+    implementation 'io.rest-assured:rest-assured:5.3.0'
+
+    implementation 'org.apache.avro:avro:1.11.1'
+    implementation 'org.apache.avro:avro-tools:1.11.1'
+
+    implementation 'org.apache.kafka:kafka-streams:2.1.1'
+
+    implementation 'io.confluent:kafka-streams-avro-serde:5.1.1'
+    implementation 'io.confluent:kafka-avro-serializer:5.3.0'
+
+    testImplementation 'org.apache.kafka:kafka_2.11:2.1.1'
+
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.10.4'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'com.github.tomakehurst:wiremock:2.27.2'
+    testImplementation 'de.mkammerer.wiremock-junit5:wiremock-junit5:1.1.0'
+    implementation project(':kafka-cluster')
+}
+
+test {
+    useJUnitPlatform()
+}
+
+def generateAvro = tasks.register("generateAvro", GenerateAvroJavaTask) {
+    source("src/main/resources/avro")
+    outputDir = file("src/main/java/")
+}
+
+tasks.named("compileJava").configure {
+    source(generateAvro)
+}
