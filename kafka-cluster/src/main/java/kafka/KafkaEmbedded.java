@@ -40,9 +40,7 @@ public class KafkaEmbedded {
      * https://github.com/confluentinc/kafka-streams-examples/blob/5.2.0-post/src/test/java/io/confluent/examples/streams/kafka/KafkaEmbedded.java
      * Создает и запускает локальный кафка сервер в runtime режиме
      *
-     * @param config Broker configuration settings.  Used to modify, for example, on which port the
-     *               broker should listen to.  Note that you cannot change some settings such as
-     *               `log.dirs`, `port`.
+     * @param config конфигурация брокера. Нельзя менять конфиги для log.dirs и port
      */
     public KafkaEmbedded(final Properties config) throws IOException {
         //создает папку для данных кафка кластера
