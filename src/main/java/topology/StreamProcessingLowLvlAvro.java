@@ -16,6 +16,7 @@ import org.apache.kafka.streams.state.Stores;
 public class StreamProcessingLowLvlAvro {
 
     // сохраняет данные при работе как состояние внутри себя
+    // дедуплицирует данные по айди юзера (удаляет повторяющиеся значения)
     public static Topology topologyDedupByUserId(String sourceTopic, String sinkTopic, Serde<Person> personSerdes,
                                                  String idStore) {
 

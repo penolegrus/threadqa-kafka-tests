@@ -41,7 +41,6 @@ public class MaterializerApp {
         Runtime.getRuntime().addShutdownHook(new Thread(kafkaMessageTransformer::stop));
     }
 
-    // for test
     public DatabaseWebService getDbWebService() {
         return dbWebService;
     }

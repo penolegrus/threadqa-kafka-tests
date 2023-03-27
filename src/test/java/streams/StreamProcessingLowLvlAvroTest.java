@@ -126,13 +126,13 @@ public class StreamProcessingLowLvlAvroTest {
         final ProducerRecord<String, Person> outRecord3 =
                 testDriver.readOutput(topicOut, new StringDeserializer(), serde.deserializer());
 
-        assertEquals("Naruto", outRecord1.value().getName());
+        assertEquals("Itachi", outRecord1.value().getName());
         assertEquals("id-1", outRecord1.key());
         assertEquals("id-1", person.getId());
         assertNull(outRecord2);
         assertNull(outRecord3);
 
-        assertEquals("Uzumaki", dedupStore.get("id-1").getLastname());
+        assertEquals("Uchiha", dedupStore.get("id-1").getLastname());
         assertNull(dedupStore.get("invalid-id"));
 
         assertEquals(1, dedupStore.approximateNumEntries());

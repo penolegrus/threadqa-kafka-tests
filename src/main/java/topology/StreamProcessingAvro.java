@@ -13,7 +13,8 @@ import org.apache.kafka.streams.state.KeyValueStore;
 
 public class StreamProcessingAvro {
 
-    //  каждый запрос уникален
+    // каждый запрос уникален
+    // конвертирует сообщение в заглавные буквы из Avro схемы
     public static Topology topologyUpperCase(String sourceTopic, String sinkTopic, Serde<Person> personSerdes) {
         final StreamsBuilder builder = new StreamsBuilder();
         builder.stream(sourceTopic, Consumed.with(Serdes.String(), personSerdes))
@@ -30,6 +31,7 @@ public class StreamProcessingAvro {
     }
 
     // сохраняет данные при работе как состояние внутри себя
+    // считает одинаковые имена
     public static Topology topologyCountUsersWithSameName(String sourceTopic, String sinkTopic,
                                                           Serde<Person> personSerdes, String storeName) {
 

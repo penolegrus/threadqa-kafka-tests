@@ -17,7 +17,7 @@ public class RestApp extends io.dropwizard.Application<ProducerRestConfig>{
     new RestApp().run(args);
   }
 
-  // enable environment variables
+  // подключаем переменные окружения в замоканное приложение
   @Override
   public void initialize(Bootstrap<ProducerRestConfig> bootstrap) {
     bootstrap.setConfigurationSourceProvider(
@@ -36,7 +36,7 @@ public class RestApp extends io.dropwizard.Application<ProducerRestConfig>{
     MessageTransformer transformer = new MessageTransformer();
     MessageResources messageResources = new MessageResources(messageProducer, transformer);
 
-    // register REST endpoints
+    // загистрируем эндпоинты и остальную часть для запуска приложения
     environment.jersey().register(messageResources);
   }
 

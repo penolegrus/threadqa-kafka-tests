@@ -57,20 +57,15 @@ public class StreamProcessingAvroTest {
 
     @Test
     public void testTopologyAvro_statelessProcessors() {
-
-        /** Arrange */
-        // register schema in mock schema-registry -> not necessary
-        // schemaRegistryClient.register(
-        //    new TopicNameStrategy().subjectName(topicIn, false, Person.SCHEMA$), Person.SCHEMA$);
-        // create serde with config to be able to connect to mock schema registry
-        // https://github.com/confluentinc/schema-registry/issues/877
-        // Passing Schema Registry URL twice to instantiate KafkaAvroSerializer or Serde
+        // регистрируем схему в регистре (не обязательно)
+        // schemaRegistryClient.register(TopicNameStrategy().subjectName(topicIn, false, Person.SCHEMA$), Person.SCHEMA$);
+        // создаем серду с конфигом чтобы подключаться замоканной регистру схем
         final SpecificAvroSerde<Person> serde = new SpecificAvroSerde<>(schemaRegistryClient);
 
         final Map<String, String> schema =
                 Collections.singletonMap(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "some-fake-url");
         serde.configure(schema, false);
-        // get topology
+        // получаем топологию
         final Topology topology = StreamProcessingAvro.topologyUpperCase(topicIn, topicOut, serde);
         testDriver = new TopologyTestDriver(topology, properties);
 
@@ -88,14 +83,14 @@ public class StreamProcessingAvroTest {
                         "2",
                         Person.newBuilder().setId("id-2").setName("ivan").setLastname("ivanov").build());
 
-        /** Act */
+        // отправляем сообщения
         testDriver.pipeInput(Arrays.asList(inRecord1, inRecord2));
         final ProducerRecord<String, Person> outRecord1 =
                 testDriver.readOutput(topicOut, new StringDeserializer(), serde.deserializer());
         final ProducerRecord<String, Person> outRecord2 =
                 testDriver.readOutput(topicOut, new StringDeserializer(), serde.deserializer());
 
-        /** Assert */
+        // ассертим
         assertEquals("ID-1", outRecord1.value().getId());
         assertEquals("ID-2", outRecord2.value().getId());
         assertEquals("ivanov".toUpperCase(), outRecord2.value().getLastname());
@@ -108,7 +103,7 @@ public class StreamProcessingAvroTest {
         // регистрируем схему в регистре (не обязательно)
         // schemaRegistryClient.register(new TopicNameStrategy().subjectName(topicIn, false, Person.SCHEMA$), Person.SCHEMA$);
 
-        // create serde with config to be able to connect to mock schema registry
+        // создаем серду с конфигом чтобы подключаться замоканной регистру схем
         final SpecificAvroSerde<Person> serde = new SpecificAvroSerde<>(schemaRegistryClient);
 
         final Map<String, String> schema =
@@ -122,24 +117,18 @@ public class StreamProcessingAvroTest {
         final ConsumerRecordFactory<String, Person> factory =
                 new ConsumerRecordFactory<>(topicIn, new StringSerializer(), serde.serializer());
 
-        final ConsumerRecord<byte[], byte[]> inRecord1 =
-                factory.create(
-                        topicIn,
-                        "1",
-                        Person.newBuilder().setId("id-1").setName("oleg").setLastname("threadqa").build());
+        Person person1 = Person.newBuilder().setId("id-1").setName("oleg").setLastname("threadqa").build();
+        final ConsumerRecord<byte[], byte[]> inRecord1 = factory.create(topicIn, "1", person1);
 
-        final ConsumerRecord<byte[], byte[]> inRecord2 =
-                factory.create(
-                        topicIn,
-                        "2",
-                        Person.newBuilder().setId("id-2").setName("ivan").setLastname("ivanov").build());
+        Person person2 = Person.newBuilder().setId("id-2").setName("oleg").setLastname("olegov").build();
+        final ConsumerRecord<byte[], byte[]> inRecord2 = factory.create(topicIn, "2", person2);
 
-        /** Act */
+        // пускаем сообщения
         testDriver.pipeInput(Arrays.asList(inRecord1, inRecord2));
         final KeyValueStore<String, Long> keyValueStore = testDriver.getKeyValueStore(storeName);
-        final Long amountOfRecordWithSameName = keyValueStore.get("ivan");
+        final Long amountOfRecordWithSameName = keyValueStore.get("oleg");
 
-        /** Assert */
+        // асертим
         assertEquals(Long.valueOf(2), amountOfRecordWithSameName);
     }
 }
