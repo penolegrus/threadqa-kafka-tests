@@ -26,6 +26,10 @@ public class RestApp extends io.dropwizard.Application<ProducerRestConfig>{
     super.initialize(bootstrap);
   }
 
+  @Override // надо переопределить логи иначе не запустится
+  protected void bootstrapLogging() {
+  }
+
   @Override
   public void run(ProducerRestConfig producerRestConfig, Environment environment) {
     environment

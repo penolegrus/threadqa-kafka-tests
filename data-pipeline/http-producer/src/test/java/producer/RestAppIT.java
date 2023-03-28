@@ -115,8 +115,7 @@ public class RestAppIT {
     private Properties getConsumerProperties() {
         final Properties properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, CLUSTER.bootstrapServers());
-        properties.put(
-                AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, CLUSTER.schemaRegistryUrl());
+        properties.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, CLUSTER.schemaRegistryUrl());
         properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "client-" + UUID.randomUUID());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "gr-" + UUID.randomUUID());
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

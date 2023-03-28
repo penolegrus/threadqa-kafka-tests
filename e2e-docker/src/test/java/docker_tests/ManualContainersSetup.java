@@ -68,7 +68,7 @@ public final class ManualContainersSetup {
         jsonServer =
                 new GenericContainer("zhenik/json-server")
                         .withExposedPorts(80)
-                        // all containers put in same network
+                        // все контейнеры должны быть в одной сети
                         .withNetwork(network)
                         .withEnv("ID_MAP", "id")
                         .withNetworkAliases("json-server")
@@ -77,7 +77,7 @@ public final class ManualContainersSetup {
                         .waitingFor(Wait.forHttp("/").forStatusCode(200));
 
         jsonServer.start();
-        // provide availability make http calls from localhost against docker env
+        // даем возможность отправлять запросы из локахоста
         JSON_SERVER_EXPOSED = "http://" + jsonServer.getHost() + ":" + jsonServer.getMappedPort(80);
         JSON_SERVER_INSIDE_DOCKER_ENV = "http://" + jsonServer.getNetworkAliases().get(0) + ":80";
     }
@@ -95,7 +95,6 @@ public final class ManualContainersSetup {
         httpProducer.start();
 
         HTTP_PRODUCER_EXPOSED = "http://" + httpProducer.getHost() + ":" + httpProducer.getMappedPort(8080);
-//        HTTP_PRODUCER_EXPOSED = LOCAL_HOST + ":" + httpProducer.getMappedPort(8080);
     }
 
     private static void setHttpMaterializer(Network network) {

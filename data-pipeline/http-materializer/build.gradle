@@ -19,26 +19,48 @@ repositories {
 
 
 dependencies {
+    implementation 'io.rest-assured:rest-assured:5.3.0'
+
+    testImplementation 'com.github.tomakehurst:wiremock:2.27.2'
+    testImplementation 'de.mkammerer.wiremock-junit5:wiremock-junit5:1.1.0'
+    testImplementation project(':kafka-cluster')
+    testImplementation 'org.slf4j:slf4j-log4j12:1.7.25'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    implementation 'com.typesafe:config:1.4.2'
-    implementation 'io.rest-assured:rest-assured:5.3.0'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
 
     implementation 'org.apache.avro:avro:1.11.1'
     implementation 'org.apache.avro:avro-tools:1.11.1'
 
-    implementation 'org.apache.kafka:kafka-streams:2.1.1'
+    implementation 'io.confluent:kafka-avro-serializer:5.1.1'
+    implementation 'io.confluent:kafka-schema-registry:5.1.1'
+    implementation 'io.confluent:kafka-schema-registry:5.1.1:tests'
+
+    testImplementation 'org.apache.kafka:kafka-clients:2.1.1:test'
+    testImplementation 'org.apache.kafka:kafka-clients:2.1.1'
+    testImplementation 'org.apache.kafka:kafka_2.11:2.1.1:test'
+
+    testImplementation 'org.apache.curator:curator-test:2.9.0'
+    testImplementation 'io.rest-assured:rest-assured:5.3.0'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.10.4'
+    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+
+    testImplementation 'org.testcontainers:testcontainers:1.17.6'
+    testImplementation "org.testcontainers:junit-jupiter:1.17.6"
+
+    testImplementation 'org.testcontainers:kafka:1.11.2'
 
     implementation 'io.confluent:kafka-streams-avro-serde:5.1.1'
-    implementation 'io.confluent:kafka-avro-serializer:5.3.0'
+    testImplementation 'io.confluent:kafka-avro-serializer:5.1.1'
 
-    testImplementation 'org.apache.kafka:kafka_2.11:2.1.1'
-
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.10.4'
-    testImplementation 'org.awaitility:awaitility:4.2.0'
-    testImplementation 'com.github.tomakehurst:wiremock:2.27.2'
-    testImplementation 'de.mkammerer.wiremock-junit5:wiremock-junit5:1.1.0'
+    implementation 'com.typesafe:config:1.4.2'
     implementation project(':kafka-cluster')
+
+    implementation 'org.apache.kafka:kafka-streams-test-utils:2.1.1'
+    implementation 'org.apache.kafka:kafka-streams:2.1.1'
 }
 
 test {

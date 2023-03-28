@@ -5,6 +5,7 @@ import avro.Message;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import de.mkammerer.wiremock.WireMockExtension;
 import kafka.EmbeddedSingleNodeKafkaCluster;
 import materializer.MaterializerApp;
@@ -19,12 +20,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,29 +28,28 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ApplicationIT {
     private static final String JSON = "application/json; charset=utf-8";
     public static EmbeddedSingleNodeKafkaCluster CLUSTER;
+    private static WireMockServer wireMockServer;
 
     @BeforeAll
     public static void initCluster() throws Exception {
         CLUSTER = new EmbeddedSingleNodeKafkaCluster();
         CLUSTER.start();
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
     }
-
     @AfterAll
     public static void closeCluster() {
         CLUSTER.stop();
+        wireMockServer.stop();
     }
-
-    @RegisterExtension
-    public WireMockExtension wireMockRule = new WireMockExtension(wireMockConfig().dynamicPort());
-
     @Test
     public void send_InMemory_3Msg_success() throws ExecutionException, InterruptedException {
 
         String topic = "topic1";
         CLUSTER.createTopic(topic);
 
-        // config
-        final String dbRestServiceUrl = "http://whatever:1234/messages";
+        // конфиг
+        final String dbRestServiceUrl = "http://somefakeurl:1234/messages";
         final MaterializerConfig.KafkaConfig kafkaConfig = new MaterializerConfig.KafkaConfig(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic);
         final MaterializerConfig.DatabaseRestServiceConfig dbRestServiceConfig = new MaterializerConfig.DatabaseRestServiceConfig(dbRestServiceUrl);
         final MaterializerConfig testConfig = new MaterializerConfig("test", kafkaConfig, dbRestServiceConfig);
@@ -92,24 +87,21 @@ public class ApplicationIT {
         CLUSTER.createTopic(topic);
 
         // конфиг
-        final String baseUrl = wireMockRule.baseUrl();
-        final String dbRestServiceUrl = baseUrl + "/messages";
-        final MaterializerConfig.KafkaConfig kafkaConfig = new MaterializerConfig.KafkaConfig(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic);
-        final MaterializerConfig.DatabaseRestServiceConfig dbRestServiceConfig = new MaterializerConfig.DatabaseRestServiceConfig(dbRestServiceUrl);
-        final MaterializerConfig testConfig = new MaterializerConfig("test", kafkaConfig, dbRestServiceConfig);
+        String baseUrl = wireMockServer.baseUrl();
+        String dbRestServiceUrl = baseUrl + "/messages";
+        MaterializerConfig.KafkaConfig kafkaConfig = new MaterializerConfig.KafkaConfig(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic);
+        MaterializerConfig.DatabaseRestServiceConfig dbRestServiceConfig = new MaterializerConfig.DatabaseRestServiceConfig(dbRestServiceUrl);
+        MaterializerConfig testConfig = new MaterializerConfig("test", kafkaConfig, dbRestServiceConfig);
 
-        final MaterializerApp materializerApp = new MaterializerApp(testConfig, new MessageTransformer(), false);
+        MaterializerApp materializerApp = new MaterializerApp(testConfig, new MessageTransformer(), false);
 
-        // wiremock заглушка
-        stubFor(
+        // wiremock заглушка, ожидаем что при отправке пост запроса, вернется статус 201
+        wireMockServer.stubFor(
                 post(urlEqualTo("/messages"))
-                        // .withHeader("Accept", equalTo(JSON))
-                        // .withHeader("Content-Type", equalTo(JSON))
                         .willReturn(aResponse().withStatus(201).withHeader("Content-Type", JSON)));
 
         // отправляем 3 сообщения
-        final KafkaProducer<String, Message> messageProducer =
-                TestUtils.getMessageProducer(kafkaConfig);
+        final KafkaProducer<String, Message> messageProducer = TestUtils.getMessageProducer(kafkaConfig);
         for (int i = 1; i < 4; i++) {
             final Message msg =
                     Message.newBuilder()
@@ -129,8 +121,8 @@ public class ApplicationIT {
                 .atMost(15, TimeUnit.SECONDS)
                 .untilAsserted(
                         () ->
-                                // verify 3 POST requests happen
-                                verify(3, postRequestedFor(urlEqualTo("/messages"))));
+                                // проверяем что отправлено 3 пост запроса
+                                wireMockServer.verify(3, postRequestedFor(urlEqualTo("/messages"))));
         //закрываем приложение
         materializerApp.stop();
     }
@@ -141,37 +133,37 @@ public class ApplicationIT {
         CLUSTER.createTopic(topic);
 
         // конфиг
-        final String baseUrl = wireMockRule.baseUrl();
-        final String dbRestServiceUrl = baseUrl + "/messages";
-        final MaterializerConfig.KafkaConfig kafkaConfig = new MaterializerConfig.KafkaConfig(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic);
-        final MaterializerConfig.DatabaseRestServiceConfig dbRestServiceConfig = new MaterializerConfig.DatabaseRestServiceConfig(dbRestServiceUrl);
-        final MaterializerConfig testConfig = new MaterializerConfig("test", kafkaConfig, dbRestServiceConfig);
+        String baseUrl = wireMockServer.baseUrl();
+        String dbRestServiceUrl = baseUrl + "/messages";
+        MaterializerConfig.KafkaConfig kafkaConfig = new MaterializerConfig.KafkaConfig(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic);
+        MaterializerConfig.DatabaseRestServiceConfig dbRestServiceConfig = new MaterializerConfig.DatabaseRestServiceConfig(dbRestServiceUrl);
+        MaterializerConfig testConfig = new MaterializerConfig("test", kafkaConfig, dbRestServiceConfig);
 
-        final MaterializerApp materializerApp = new MaterializerApp(testConfig, new MessageTransformer(), false);
+        MaterializerApp materializerApp = new MaterializerApp(testConfig, new MessageTransformer(), false);
 
         // запускаем приложение
         materializerApp.start();
-        final KafkaStreams.State runningState = materializerApp.getKafkaMessageMaterializer().getState();
+        KafkaStreams.State runningState = materializerApp.getKafkaMessageMaterializer().getState();
 
         assertTrue(runningState.isRunning());
 
         // инициализируем продюсера
-        final KafkaProducer<String, Message> messageProducer = TestUtils.getMessageProducer(kafkaConfig);
-        final Message msg = Message.newBuilder().setId("id-1").setFrom("from-1").setTo("to-1").setText("text-1").build();
+        KafkaProducer<String, Message> messageProducer = TestUtils.getMessageProducer(kafkaConfig);
+        Message msg = Message.newBuilder().setId("id-1").setFrom("from-1").setTo("to-1").setText("text-1").build();
 
         // wiremock создаем заглушку
-        stubFor(
+        wireMockServer.stubFor(
                 post(urlEqualTo("/messages"))
                         .willReturn(aResponse().withStatus(201).withHeader("Content-Type", JSON)));
         // отправляем сообщение
         messageProducer.send(new ProducerRecord<>(topic, msg.getId(), msg)).get(); // приходит не сразу
 
         await()
-                .atMost(15, TimeUnit.SECONDS)
-                .untilAsserted(() -> verify(1, postRequestedFor(urlEqualTo("/messages"))));
+                .atMost(15, TimeUnit.SECONDS) //ждем пока запрос отправится в заглушку
+                .untilAsserted(() -> wireMockServer.verify(1, postRequestedFor(urlEqualTo("/messages"))));
 
         // заглушка с неправильной отправкой запроса, которая вернет статус 409
-        stubFor(
+        wireMockServer.stubFor(
                 post(urlEqualTo("/messages"))
                         .willReturn(
                                 aResponse()
@@ -202,7 +194,7 @@ public class ApplicationIT {
 
         // Отправлено 3 сообщения, но стрим завалился и остановился после обработки 2-го сообщения -> только 2 запроса
         // проверяем что отправлено всего 2 сообщение, а третье не обработалось
-        verify(2, postRequestedFor(urlEqualTo("/messages")));
+        wireMockServer.verify(2, postRequestedFor(urlEqualTo("/messages")));
 
         // закрываем приложение
         materializerApp.stop();
