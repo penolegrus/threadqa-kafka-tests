@@ -13,7 +13,6 @@ include 'data-pipeline:http-materializer'
 findProject(':data-pipeline:http-materializer')?.name = 'http-materializer'
 include 'data-pipeline:http-producer'
 findProject(':data-pipeline:http-producer')?.name = 'http-producer'
-findProject(':data-pipeline:schema')?.name = 'schema'
 include 'kafka-cluster'
 include 'e2e-docker'
 
