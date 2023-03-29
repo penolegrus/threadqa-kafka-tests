@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class BaseClusterIT {
     /**
      * Кафка кластер
@@ -15,6 +17,7 @@ public class BaseClusterIT {
         cluster = new EmbeddedSingleNodeKafkaCluster();
         //перед всеми тестами запускаем кафку кластер для обработки сообщений
         cluster.start();
+        assertTrue(cluster.isRunning());
     }
 
     @AfterAll

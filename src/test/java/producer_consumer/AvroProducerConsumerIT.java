@@ -30,11 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AvroProducerConsumerIT extends BaseClusterIT {
     @Test
-    public void clusterIsRunning() {
-        assertTrue(cluster.isRunning());
-    }
-
-    @Test
     @SneakyThrows
     // Тест на проверку отправки сообщения продюсером
     public void testAvroProducer() {

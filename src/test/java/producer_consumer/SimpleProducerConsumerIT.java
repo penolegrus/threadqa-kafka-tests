@@ -24,10 +24,6 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimpleProducerConsumerIT extends BaseClusterIT {
-    @Test
-    public void clusterIsRunning() {
-        assertTrue(cluster.isRunning());
-    }
 
     @Test
     @SneakyThrows
