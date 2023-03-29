@@ -21,8 +21,8 @@ public class RestApp extends io.dropwizard.Application<ProducerRestConfig>{
   @Override
   public void initialize(Bootstrap<ProducerRestConfig> bootstrap) {
     bootstrap.setConfigurationSourceProvider(
-            new SubstitutingSourceProvider(
-                    bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+            new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                    new EnvironmentVariableSubstitutor(false)));
     super.initialize(bootstrap);
   }
 
@@ -40,7 +40,7 @@ public class RestApp extends io.dropwizard.Application<ProducerRestConfig>{
     MessageTransformer transformer = new MessageTransformer();
     MessageResources messageResources = new MessageResources(messageProducer, transformer);
 
-    // загистрируем эндпоинты и остальную часть для запуска приложения
+    // регаем эндпоинты и остальную часть для запуска приложения
     environment.jersey().register(messageResources);
   }
 

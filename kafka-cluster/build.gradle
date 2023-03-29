@@ -13,9 +13,7 @@ repositories {
 }
 
 dependencies {
-
     implementation 'org.apache.avro:avro:1.11.1'
-    implementation 'org.apache.avro:avro-tools:1.11.1'
 
     implementation 'org.apache.curator:curator-test:2.9.0'
 
@@ -23,14 +21,9 @@ dependencies {
     implementation 'io.confluent:kafka-schema-registry:5.1.1'
 
     implementation 'org.apache.kafka:kafka-clients:2.6.0:test'
-    implementation 'org.apache.kafka:kafka-clients:2.6.0'
 
     implementation 'org.apache.kafka:kafka_2.11:2.1.1:test'
     implementation 'org.apache.kafka:kafka_2.11:2.1.1'
-
-
-
-    implementation 'org.apache.curator:curator-test:2.9.0'
 }
 
 test {

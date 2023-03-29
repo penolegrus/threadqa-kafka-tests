@@ -15,4 +15,3 @@ include 'data-pipeline:http-producer'
 findProject(':data-pipeline:http-producer')?.name = 'http-producer'
 include 'kafka-cluster'
 include 'e2e-docker'
-

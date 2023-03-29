@@ -2,6 +2,8 @@ package producer;
 
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.dropwizard.testing.DropwizardTestSupport;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import kafka.EmbeddedSingleNodeKafkaCluster;
 import models.AvroMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -9,15 +11,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import producer.domain.MessageModel;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,13 +23,16 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static io.restassured.RestAssured.given;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RestAppIT {
     private static final String topic = "topic1";
     private static ProducerRestConfig producerRestConfig;
-    private static DropwizardTestSupport<ProducerRestConfig> SUPPORT;
+
+    // https://www.dropwizard.io/en/latest/manual/testing.html гайд по дропвизарду
+    private static DropwizardTestSupport<ProducerRestConfig> MOCKED_APP;
     private static EmbeddedSingleNodeKafkaCluster CLUSTER;
 
     @BeforeAll
@@ -39,34 +40,32 @@ public class RestAppIT {
         CLUSTER = new EmbeddedSingleNodeKafkaCluster();
         CLUSTER.start();
 
-        // инициализируем тестовый сервис который обрабатывает независимые запросы
+        // конфиг с кафкой
         producerRestConfig =
-                new ProducerRestConfig(
-                        "test-config-1",
+                new ProducerRestConfig("test-config-1",
                         new ProducerRestConfig.KafkaClientFactory(CLUSTER.bootstrapServers(), CLUSTER.schemaRegistryUrl(), topic));
-        SUPPORT = new DropwizardTestSupport<>(RestApp.class, producerRestConfig);
-        SUPPORT.before();
+        // запускаем замоканное приложение, которое будет отправлять запросы в запущенный кафка кластер
+        MOCKED_APP = new DropwizardTestSupport<>(RestApp.class, producerRestConfig);
+        MOCKED_APP.before();
+        RestAssured.baseURI = String.format("http://localhost:%d", MOCKED_APP.getLocalPort());
     }
 
     @AfterAll
     public static void closeCluster() {
         CLUSTER.stop();
-        SUPPORT.after();
+        MOCKED_APP.after();
         producerRestConfig = null;
-        SUPPORT = null;
+        MOCKED_APP = null;
     }
 
     @Test
     public void sendPostRequest_msgProduced_success() {
-        Client client = new JerseyClientBuilder().build();
+        MessageModel message = new MessageModel("id-1", "from-1", "to-1", "text-1");
 
-        Response response =
-                client
-                        .target(String.format("http://localhost:%d/messages", SUPPORT.getLocalPort()))
-                        .request()//создаем модель с полными значениями
-                        .post(Entity.json(new MessageModel("id-1", "from-1", "to-1", "text-1")));
-
-        assertEquals(202, response.getStatus());
+        given().contentType(ContentType.JSON)
+                .body(message)
+                .post("/messages")
+                .then().assertThat().statusCode(202);
 
         final KafkaConsumer<String, AvroMessage> consumer = new KafkaConsumer<>(getConsumerProperties());
         consumer.subscribe(Collections.singletonList(topic));
@@ -75,7 +74,8 @@ public class RestAppIT {
         await()
                 .atMost(25, TimeUnit.SECONDS)
                 .untilAsserted(
-                        () -> {//проверяем что сообщение доставлено, так как модель имеет все заполненные поля
+                        () -> {
+                            //проверяем что сообщение доставлено, так как модель имеет все заполненные поля
                             final ConsumerRecords<String, AvroMessage> records = consumer.poll(Duration.ofMillis(100));
                             records.forEach(record -> messages.add(record.value()));
                             assertEquals(1, messages.size());
@@ -84,17 +84,13 @@ public class RestAppIT {
 
     @Test
     public void sendPostRequest_msgProduced_fail() {
-        Client client = new JerseyClientBuilder().build();
+        // пробуем построить модель с null значениями
+        MessageModel model = new MessageModel(null, null, "null", "");
 
-        Response response =
-                client
-                        .target(String.format("http://localhost:%d/messages", SUPPORT.getLocalPort()))
-                        .request()
-                        // пробуем построить модель с null значениями
-                        .post(Entity.json(new MessageModel(null, null, "null", "")));
-
-        // получаем ошибка
-        assertEquals(400, response.getStatus());
+        given().contentType(ContentType.JSON)
+                .body(model)
+                .post("/messages")
+                .then().assertThat().statusCode(400); //проверяем что пришла ошибка из за null в схеме
 
         final KafkaConsumer<String, AvroMessage> consumer = new KafkaConsumer<>(getConsumerProperties());
         consumer.subscribe(Collections.singletonList(topic));
@@ -102,7 +98,8 @@ public class RestAppIT {
 
         await()
                 .pollDelay(5, TimeUnit.SECONDS)
-                .untilAsserted( //проверяем что сообщение не доставлено
+                .untilAsserted(
+                        //проверяем что сообщение не доставлено
                         () -> {
                             final ConsumerRecords<String, AvroMessage> records = consumer.poll(Duration.ofSeconds(1));
                             for (final ConsumerRecord<String, AvroMessage> record : records) {
@@ -121,7 +118,6 @@ public class RestAppIT {
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
         return properties;
     }
 }

@@ -15,11 +15,7 @@ import java.util.*;
 // https://github.com/confluentinc/kafka-streams-examples/blob/5.2.0-post/src/test/java/io/confluent/examples/streams/kafka/EmbeddedSingleNodeKafkaCluster.java
 
 public class EmbeddedSingleNodeKafkaCluster {
-  private static final int DEFAULT_BROKER_PORT = 0; // 0 выбирается рандомный порт
-  private static final String KAFKA_SCHEMAS_TOPIC = "_schemas";
-  private static final String AVRO_COMPATIBILITY_TYPE = AvroCompatibilityLevel.NONE.name;
   private static final String KAFKASTORE_OPERATION_TIMEOUT_MS = "60000";
-  private static final String KAFKASTORE_DEBUG = "true";
   private static final String KAFKASTORE_INIT_TIMEOUT = "90000";
   private ZooKeeperEmbedded zookeeper;
   private KafkaEmbedded broker;
@@ -56,10 +52,10 @@ public class EmbeddedSingleNodeKafkaCluster {
     final Properties schemaRegistryProps = new Properties();
 
     schemaRegistryProps.put(SchemaRegistryConfig.KAFKASTORE_TIMEOUT_CONFIG, KAFKASTORE_OPERATION_TIMEOUT_MS);
-    schemaRegistryProps.put(SchemaRegistryConfig.DEBUG_CONFIG, KAFKASTORE_DEBUG);
+    schemaRegistryProps.put(SchemaRegistryConfig.DEBUG_CONFIG, "true");
     schemaRegistryProps.put(SchemaRegistryConfig.KAFKASTORE_INIT_TIMEOUT_CONFIG, KAFKASTORE_INIT_TIMEOUT);
 
-    schemaRegistry = new RestApp(0, zookeeperConnect(), KAFKA_SCHEMAS_TOPIC, AVRO_COMPATIBILITY_TYPE, schemaRegistryProps);
+    schemaRegistry = new RestApp(0, zookeeperConnect(), "_schemas", AvroCompatibilityLevel.NONE.name, schemaRegistryProps);
     schemaRegistry.start();
     running = true;
   }
@@ -69,7 +65,7 @@ public class EmbeddedSingleNodeKafkaCluster {
     effectiveConfig.putAll(brokerConfig);
     effectiveConfig.put(KafkaConfig$.MODULE$.ZkConnectProp(), zookeeper.connectString());
     effectiveConfig.put(KafkaConfig$.MODULE$.ZkSessionTimeoutMsProp(), 30 * 1000);
-    effectiveConfig.put(KafkaConfig$.MODULE$.PortProp(), DEFAULT_BROKER_PORT);
+    effectiveConfig.put(KafkaConfig$.MODULE$.PortProp(), 0);
     effectiveConfig.put(KafkaConfig$.MODULE$.ZkConnectionTimeoutMsProp(), 60 * 1000);
     effectiveConfig.put(KafkaConfig$.MODULE$.DeleteTopicEnableProp(), true);
     effectiveConfig.put(KafkaConfig$.MODULE$.LogCleanerDedupeBufferSizeProp(), 2 * 1024 * 1024L);
