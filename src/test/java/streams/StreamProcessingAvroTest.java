@@ -71,17 +71,11 @@ public class StreamProcessingAvroTest {
 
         final ConsumerRecordFactory<String, Person> factory = new ConsumerRecordFactory<>(topicIn, new StringSerializer(), serde.serializer());
 
-        final ConsumerRecord<byte[], byte[]> inRecord1 =
-                factory.create(
-                        topicIn,
-                        "1",
-                        Person.newBuilder().setId("id-1").setName("oleg").setLastname("threadqa").build());
+        Person person1 = Person.newBuilder().setId("id-1").setName("oleg").setLastname("threadqa").build();
+        final ConsumerRecord<byte[], byte[]> inRecord1 = factory.create(topicIn, "1", person1);
 
-        final ConsumerRecord<byte[], byte[]> inRecord2 =
-                factory.create(
-                        topicIn,
-                        "2",
-                        Person.newBuilder().setId("id-2").setName("ivan").setLastname("ivanov").build());
+        Person person2 = Person.newBuilder().setId("id-2").setName("ivan").setLastname("ivanov").build();
+        final ConsumerRecord<byte[], byte[]> inRecord2 = factory.create(topicIn, "2", person2);
 
         // отправляем сообщения
         testDriver.pipeInput(Arrays.asList(inRecord1, inRecord2));

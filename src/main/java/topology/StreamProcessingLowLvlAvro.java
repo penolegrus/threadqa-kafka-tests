@@ -57,7 +57,6 @@ public class StreamProcessingLowLvlAvro {
                                 },
                         idStore)
                 .to(sinkTopic, Produced.with(Serdes.String(), personSerdes));
-
         return builder.build();
     }
 }

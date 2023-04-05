@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LateInitContainersTest {
 
     @BeforeAll
-    public static void initContainers(){
+    public static void initContainers() {
         // запускаем в докер контейнерах разные сервисы
         ManualContainersSetup.getInstance();
 
@@ -30,6 +30,7 @@ public class LateInitContainersTest {
         assertTrue(ManualContainersSetup.httpProducer.isRunning());
         assertTrue(ManualContainersSetup.httpMaterializer.isRunning());
     }
+
     @Test
     public void manual_init_containers_success_flow_test() {
         // проверяем что сообщения отображаются
@@ -46,7 +47,7 @@ public class LateInitContainersTest {
     }
 
     @Test
-    public void add_message_success_test(){
+    public void add_message_success_test() {
         // генерируем сообщение
         String id = UUID.randomUUID().toString();
         String from = UUID.randomUUID().toString();

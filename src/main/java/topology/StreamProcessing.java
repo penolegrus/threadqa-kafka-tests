@@ -27,7 +27,7 @@ public class StreamProcessing {
     }
 
     // сохраняет данные при работе как состояние внутри себя
-    // считает количество анаграм при обработки сообщений
+    // считает количество анаграм при обработке сообщений
     public static Topology topologyCountAnagram(String sourceTopic, String sinkTopic, String storeName) {
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         KStream<String, String> sourceStream =
